@@ -9,7 +9,10 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,6 +89,7 @@ public class VerifyTracPublisher extends Publisher {
 
 		Set<Integer> idSet = new TracClient(this.tracUrl, this.user, this.password).getClosedSet();
 		
+		Map<String, Integer> typeMap = new HashMap<String, Integer>();
 		Pattern p = Pattern.compile(this.ticketPattern);
 
 		for (CheckResult result : resultList) {
@@ -95,14 +99,21 @@ public class VerifyTracPublisher extends Publisher {
 					Integer ticketId = Integer.parseInt(m.group(1));
 					if(idSet.contains(ticketId)){
 						//TODO replace OK code
-						listener.getLogger().println(ticketId + ", OK!");
-
+//						listener.getLogger().println(ticketId + ", OK!");
+						typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_OK);
 					}else{
-						//TODO NG code
-					}					
+						typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_NOT_CLOSE);
+					}
+				}else{
+					typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_NO_TICKET);
 				}
 			}
 		}
+		
+		VerifyTracAction verifyTracAction = new VerifyTracAction(build);
+		verifyTracAction.setTypeMap(typeMap);
+		build.addAction(verifyTracAction);
+		
 
 		return true;
 	}
