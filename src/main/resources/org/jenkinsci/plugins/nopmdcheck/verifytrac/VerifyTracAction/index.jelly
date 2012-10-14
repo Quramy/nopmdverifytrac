@@ -2,60 +2,110 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 	<l:layout>
+		<style type="text/css">
+			td.wholeline{
+			width:700px;
+			}
+			
+			tr.hidden{
+			display:none;
+			}
+
+			tr div.status-icon{
+			width:16px;
+			height:16px;
+			margin-left:20px;
+			}
+			tr.line-ok div.status-icon{
+			background-image:url("${rootURL}/plugin/nopmdverifytrac/img/status_ok.png");
+			}
+			tr.line-ng div.status-icon{
+			background-image:url("${rootURL}/plugin/nopmdverifytrac/img/status_ng.png");
+			}
+		</style>
 		<st:include it="${it.owner}" page="sidepanel.jelly" />
 		<l:main-panel>
 			<div class="result" id="title">
 				<h1>${it.displayName}</h1>
 			</div>
 
-			<h2>NG List</h2>
-			<j:forEach items="${it.ngList}" var="result" indexVar="idx">
-				<div class="nopmd-result" title="${result.name}">
-					<h3>${result.name}</h3>
-					<table>
-						<thead>
-							<th>@</th>
-							<th>line</th>
-							<th>status</th>
-						</thead>
-						<tbody>
-							<j:forEach items="${result.lineHolders}" var="holder"
-								escapeText="true">
-								<tr>
-									<td>${holder.number}</td>
-									<td>
-										<j:out value="${holder.wholeLine}" />
-									</td>
-									<td>
-									<j:if test="${it.typeMap.get(holder.hashcode) eq 1}" >
-										Ticket does not exist or isn't closed.
-									</j:if>
-									<j:if test="${it.typeMap.get(holder.hashcode) eq 2}" >
-										Cannot find ticket id in this line.
-									</j:if>
-									</td>
-								</tr>
-							</j:forEach>
-						</tbody>
-					</table>
-				</div>
-			</j:forEach>
+
+			<div id="ctrl">
+				<input id="radio-ngonly" type="radio" name="status-filter" value="0" checked="checked"></input>
+				<label>NG only</label>
+				<input id="radio-all" type="radio" name="status-filter" value="1"></input>
+				<label>All</label>
+			</div>
+			<div class="nopmd-result" title="${result.name}">
+				<h3>${result.name}</h3>
+				<j:forEach items="${it.resultList}" var="result" indexVar="idx">
+					<div class="file-area">
+						<h4>${result.name}</h4>
+						<table>
+							<thead>
+								<th class="stats">OK/NG</th>
+								<th class="number">@</th>
+								<th class="wholenumber">line</th>
+							</thead>
+							<tbody>
+								<j:forEach items="${result.lineHolders}" var="holder"
+									escapeText="true">
+									<tr
+										class="${it.typeMap.get(holder.hashcode) eq 0?'line-ok hidden':'line-ng'}">
+										<td class="status">
+											<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 1}"> -->
+											<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
+												/> -->
+											<!-- </j:if> -->
+											<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 2}"> -->
+											<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
+												/> -->
+											<!-- </j:if> -->
+											<div class="status-icon"></div>
+										</td>
+										<td class="number">${holder.number}</td>
+
+										<td class="wholeline">
+											<j:out value="${holder.wholeLine}" />
+										</td>
+									</tr>
+								</j:forEach>
 
 
-			<!-- javascript -->
-			<!--  
-			<script type="text/javascript" src="${rootURL}/plugin/nopmdcheck/js/jquery.js"></script>
-			<script type="text/javascript">
-				var $$ = jQuery.noConflict();
-			</script>
-			<script type="text/javascript" src="${rootURL}/plugin/nopmdcheck/js/underscore.js"></script>
+							</tbody>
+						</table>
+					</div>
+				</j:forEach>
+
+			</div>
+
+
+			<script type="text/javascript" src="${rootURL}/plugin/nopmdverifytrac/js/jquery.js"></script>
+			<script type="text/javascript"
+				src="${rootURL}/plugin/nopmdverifytrac/js/underscore.js"></script>
+
+			<script type="text/javascript"> var $$ = jQuery.noConflict(); </script>
 			<script type="text/javascript">
 			<![CDATA[
-				var nopmdcheck = {};
-				nopmdcheck.RESULTS = ${it.resultAsJson};
-				]]>
+				var RESULTS = ${it.resultListAsJson};
+				]]></script>
+			<script type="text/javascript">
+				<![CDATA[
+				var TYPEMAP = ${it.typeMapAsJson};
+				_.forEach(RESULTS,function(file){_.forEach(file.lineHolders, function(line){line.status = TYPEMAP[line.hashcode]})});
+			]]>
 			</script>
-			-->
+			<script type="text/javascript">
+			(function($){
+			$(function(){
+				$('input:radio[name=status-filter]').click(function(){
+					if(!$(this).attr('checked')){
+					$('div.nopmd-result tr.line-ok').toggle();
+					}
+				});
+			});
+			})(jQuery);
+			</script>
 
 		</l:main-panel>
 	</l:layout>

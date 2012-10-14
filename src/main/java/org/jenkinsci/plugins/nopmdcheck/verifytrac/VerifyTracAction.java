@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
 import org.jenkinsci.plugins.nopmdcheck.NopmdCheckResultAction;
 import org.jenkinsci.plugins.nopmdcheck.model.CheckResult;
 import org.jenkinsci.plugins.nopmdcheck.model.LineHolder;
@@ -20,6 +23,16 @@ public class VerifyTracAction implements Action {
 	private AbstractBuild<?, ?> owner;
 	
 	private Map<String, Integer> typeMap;
+	
+	private String svnUrl;
+
+	public String getSvnUrl() {
+		return svnUrl;
+	}
+
+	public void setSvnUrl(String svnUrl) {
+		this.svnUrl = svnUrl;
+	}
 
 	public Map<String, Integer> getTypeMap() {
 		return typeMap;
@@ -49,15 +62,20 @@ public class VerifyTracAction implements Action {
 		return "nopmdCheckVerifyTracResult";
 	}
 	
-	public List<CheckResult> getNgList(){
+	private List<CheckResult> getOwnersResult(){
+
 		NopmdCheckResultAction action = owner.getAction(NopmdCheckResultAction.class);
 		if(action == null){
 			return null;
 		}
 		
+		return action.getResultList();
+	}
+	
+	public List<CheckResult> getNgList(){
 		List<CheckResult> results = new ArrayList<CheckResult>();
-		for(CheckResult result:action.getResultList()){
-			CheckResult hoge = new CheckResult();
+		for(CheckResult result:getOwnersResult()){
+			CheckResult checkResult = new CheckResult();
 			List<LineHolder> lineHolders = new ArrayList<LineHolder>();
 			for(LineHolder lineHolder:result.getLineHolders()){
 				int status = typeMap.get(lineHolder.getHashcode());
@@ -66,13 +84,26 @@ public class VerifyTracAction implements Action {
 				}
 			}
 			if(lineHolders.size() > 0){
-				hoge.setName(result.getName());
-				hoge.setLineHolders(lineHolders);
-				results.add(hoge);
+				checkResult.setName(result.getName());
+				checkResult.setLineHolders(lineHolders);
+				results.add(checkResult);
 			}
 		}
 		
 		return results;
+	}
+	
+	public List<CheckResult> getResultList(){
+		return getOwnersResult();
+	}
+	
+	public String getResultListAsJson(){
+		JSONArray jsonArray= JSONArray.fromObject(getOwnersResult());
+		return jsonArray.toString();
+	}
+	
+	public String getTypeMapAsJson(){
+		return JSONObject.fromObject(typeMap).toString();
 	}
 
 }
