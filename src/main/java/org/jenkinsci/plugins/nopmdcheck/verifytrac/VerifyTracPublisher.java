@@ -7,23 +7,14 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.scm.SVNRevision;
-import hudson.scm.SubversionRepositoryStatus;
-import hudson.scm.SCM;
-import hudson.scm.SubversionSCM;
-import hudson.scm.SubversionSCM.SvnInfo;
-import hudson.scm.SubversionTagAction;
-import hudson.scm.SubversionSCM.ModuleLocation;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,7 +28,6 @@ import org.jenkinsci.plugins.nopmdcheck.model.CheckResult;
 import org.jenkinsci.plugins.nopmdcheck.model.LineHolder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import org.tmatesoft.svn.core.SVNException;
 
 public class VerifyTracPublisher extends Publisher {
 
