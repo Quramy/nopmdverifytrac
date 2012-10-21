@@ -6,7 +6,7 @@
 			td.wholeline{
 			width:700px;
 			}
-			
+
 			tr.hidden{
 			display:none;
 			}
@@ -22,6 +22,28 @@
 			tr.line-ng div.status-icon{
 			background-image:url("${rootURL}/plugin/nopmdverifytrac/img/status_ng.png");
 			}
+			div.file-area{
+			margin-top:10px;
+			margin-bottom:20px;
+			}
+			div.file-area h4.file-name{
+				margin-top:5px;
+				margin-bottom:2px;
+			}
+			
+			div.file-area table{
+				margin-left:20px;
+			}
+			
+			div.file-area th{
+				border-collapse:collapse;
+				border-style:solid;
+				border-color:#888;
+				border-bottom-width:1px;
+				border-top-width:0px;
+				border-right-width:0px;
+				border-left-width:0px;
+			}
 		</style>
 		<st:include it="${it.owner}" page="sidepanel.jelly" />
 		<l:main-panel>
@@ -31,21 +53,28 @@
 
 
 			<div id="ctrl">
-				<input id="radio-ngonly" type="radio" name="status-filter" value="0" checked="checked"></input>
-				<label>NG only</label>
-				<input id="radio-all" type="radio" name="status-filter" value="1"></input>
-				<label>All</label>
+
+				<button id="btn-ngonly" style="display:none;">Display only NG.</button>
+				<button id="btn-all">Display all</button>
+
 			</div>
 			<div class="nopmd-result" title="${result.name}">
 				<h3>${result.name}</h3>
 				<j:forEach items="${it.resultList}" var="result" indexVar="idx">
 					<div class="file-area">
-						<h4>${result.name}</h4>
+						<h4 class="file-name">
+
+							<j:if test="${it.enableBrowser}">
+								<a href="${it.getBrowserUrl(result.name)}">${result.name}</a>
+							</j:if>
+							<j:if test="${!it.enableBrowser}">${result.name}</j:if>
+						</h4>
 						<table>
 							<thead>
 								<th class="stats">OK/NG</th>
 								<th class="number">@</th>
 								<th class="wholenumber">line</th>
+								<th class="link">link</th>
 							</thead>
 							<tbody>
 								<j:forEach items="${result.lineHolders}" var="holder"
@@ -67,6 +96,9 @@
 
 										<td class="wholeline">
 											<j:out value="${holder.wholeLine}" />
+										</td>
+										<td>
+											<a href="${it.getBrowserUrl(result.name, holder.number)}">jump</a>
 										</td>
 									</tr>
 								</j:forEach>
@@ -96,15 +128,19 @@
 			]]>
 			</script>
 			<script type="text/javascript">
-			(function($){
-			$(function(){
-				$('input:radio[name=status-filter]').click(function(){
-					if(!$(this).attr('checked')){
-					$('div.nopmd-result tr.line-ok').toggle();
-					}
+				(function($){
+				$(function(){
+
+				$('#btn-ngonly').click(function(){
+				$('div.nopmd-result tr.line-ok').hide();
+				$('#btn-ngonly, #btn-all').toggle();
 				});
-			});
-			})(jQuery);
+				$('#btn-all').click(function(){
+				$('div.nopmd-result tr.line-ok').show();
+				$('#btn-ngonly, #btn-all').toggle();
+				});
+				});
+				})(jQuery);
 			</script>
 
 		</l:main-panel>

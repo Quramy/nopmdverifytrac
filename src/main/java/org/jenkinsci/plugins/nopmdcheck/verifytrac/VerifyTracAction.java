@@ -24,14 +24,47 @@ public class VerifyTracAction implements Action {
 	
 	private Map<String, Integer> typeMap;
 	
-	private String svnUrl;
+	
+	private String tracUrl;
+	private String svnPath;
+	public String getTracUrl() {
+		return tracUrl;
+	}
+	
+	public boolean getEnableBrowser(){
+		return svnPath != null && svnPath.length() > 0 && revision != null & revision.length() > 0;
+	}
+	
+	public String getBrowserUrl(String name){
+		return tracUrl + "/browser/" + svnPath + name + "?rev=" + revision;
+	}
+	
 
-	public String getSvnUrl() {
-		return svnUrl;
+	public String getBrowserUrl(String name, int line){
+		return getBrowserUrl(name) + "#L" + line;
 	}
 
-	public void setSvnUrl(String svnUrl) {
-		this.svnUrl = svnUrl;
+
+	public void setTracUrl(String tracUrl) {
+		this.tracUrl = tracUrl;
+	}
+
+	public String getSvnPath() {
+		return svnPath;
+	}
+
+	public void setSvnPath(String svnPath) {
+		this.svnPath = svnPath;
+	}
+
+	private String revision;
+
+	public String getRevision() {
+		return revision;
+	}
+
+	public void setRevision(String revision) {
+		this.revision = revision;
 	}
 
 	public Map<String, Integer> getTypeMap() {

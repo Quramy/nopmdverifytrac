@@ -7,6 +7,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.scm.SubversionSCM.SvnInfo;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 
@@ -74,7 +75,7 @@ public class VerifyTracPublisher extends Publisher {
 	@DataBoundConstructor
 	public VerifyTracPublisher(String ticketPattern, String tracUrl, String user, String password) {
 		this.ticketPattern = ticketPattern;
-		this.tracUrl = tracUrl;
+		this.tracUrl = tracUrl.replaceAll("/\\s*$", "");
 		this.user = user;
 		this.password = password;
 	}
@@ -114,37 +115,63 @@ public class VerifyTracPublisher extends Publisher {
 			}
 		}
 
-//		SCM scm = build.getProject().getScm();
-//		SubversionSCM sscm = null;
-//		listener.getLogger().println(scm.getType());
-		String svnUrl = null;
-//		Long revision;
-
-		File f = new File(build.getRootDir(), "revision.txt");
-		if(f.exists()){
-			listener.getLogger().println("revision!");
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(f));
-				svnUrl=br.readLine();
-//				listener.getLogger().println(urlInfo);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		SCMRevisionState state =build.getAction(SCMRevisionState.class);
-		if(state != null){
-//			revision = SVNRevision.rev(state, svnUrl);
-//			listener.getLogger().println(revision);
-		}
-		
 		VerifyTracAction verifyTracAction;
 		verifyTracAction = new VerifyTracAction(build);
 		verifyTracAction.setTypeMap(typeMap);
-		verifyTracAction.setSvnUrl(svnUrl);
+		
+		SvnInfo svnInfo = fetchSvnInfo(build);
+		
+		verifyTracAction.setRevision(svnInfo.revision);
+		verifyTracAction.setSvnPath(svnInfo.rootPath);
+		verifyTracAction.setTracUrl(tracUrl);
+		listener.getLogger().println(verifyTracAction.getRevision());
 		build.addAction(verifyTracAction);
 
 		return true;
+	}
+
+	private SvnInfo fetchSvnInfo(AbstractBuild<?, ?> build) {
+
+		SvnInfo svnInfo = new SvnInfo();
+		String rev = "";
+		String svnUrl = "";
+		String prjName = "";
+
+		// "http://com.example/svn/trunk/fooo/100" in revision.txt.
+		// The last path fragment is revision.
+		File f = new File(build.getRootDir(), "revision.txt");
+		if (f.exists()) {
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(f));
+				svnUrl = br.readLine();
+				// System.out.println(svnUrl);
+				Pattern pRev = Pattern.compile("\\d+\\s*$");
+				Matcher m = pRev.matcher(svnUrl);
+
+				if (m.find()) {
+					// System.out.println("match!");
+					rev = m.group().trim();
+					svnInfo.revision = rev;
+				}
+
+				// If tracUrl is "http://com.example/trac/hogehoge", prjName is "hogehoge".
+				Pattern pPrj = Pattern.compile("[^/]+$");
+				Matcher mPrj = pPrj.matcher(tracUrl);
+				if (mPrj.find()) {
+					prjName = mPrj.group();
+//					System.out.println(prjName);
+				}
+
+				// "http://com.example/svn/hogehoge/trunk/fooo/100" -> "trunk/fooo"
+				svnInfo.rootPath = svnUrl.replaceAll("/" + rev, "").replaceFirst(".*" + prjName + "/", "");
+
+//				System.out.println(svnInfo.rootPath + ',' + svnInfo.revision);
+
+			} catch (IOException e) {
+			}
+		}
+		return svnInfo;
+
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -183,5 +210,10 @@ public class VerifyTracPublisher extends Publisher {
 			return super.configure(req, formData);
 		}
 
+	}
+
+	class SvnInfo {
+		String revision = "";
+		String rootPath = "";
 	}
 }
