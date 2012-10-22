@@ -122,6 +122,9 @@ public class VerifyTracPublisher extends Publisher {
 		verifyTracAction.setRevision(svnInfo.revision);
 		verifyTracAction.setSvnPath(svnInfo.rootPath);
 		verifyTracAction.setTracUrl(tracUrl);
+		verifyTracAction.calcNgCount();
+		
+		//TODO formatting.
 		listener.getLogger().println(verifyTracAction.getRevision());
 		build.addAction(verifyTracAction);
 

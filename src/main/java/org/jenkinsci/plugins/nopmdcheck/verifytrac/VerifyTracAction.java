@@ -27,6 +27,27 @@ public class VerifyTracAction implements Action {
 	
 	private String tracUrl;
 	private String svnPath;
+	
+	private Integer ngCount = null;
+	
+	
+	public Integer getNgCount() {
+		return ngCount;
+	}
+
+	public void setNgCount(Integer ngCount) {
+		this.ngCount = ngCount;
+	}
+	
+	public void calcNgCount(){
+		List<CheckResult> ngList = getNgList();
+		int sum = 0;
+		for(CheckResult checkResult: ngList){
+			sum += checkResult.getLineHolders().size();
+		}
+		this.ngCount = sum;
+	}
+
 	public String getTracUrl() {
 		return tracUrl;
 	}
