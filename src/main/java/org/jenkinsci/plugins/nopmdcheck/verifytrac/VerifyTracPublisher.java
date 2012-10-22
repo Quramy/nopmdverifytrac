@@ -6,8 +6,6 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.scm.SCMRevisionState;
-import hudson.scm.SubversionSCM.SvnInfo;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 
@@ -130,6 +128,11 @@ public class VerifyTracPublisher extends Publisher {
 		return true;
 	}
 
+	/**
+	 * fetch SVN url and revision from revision.txt.
+	 * @param build
+	 * @return
+	 */
 	private SvnInfo fetchSvnInfo(AbstractBuild<?, ?> build) {
 
 		SvnInfo svnInfo = new SvnInfo();
@@ -164,10 +167,11 @@ public class VerifyTracPublisher extends Publisher {
 
 				// "http://com.example/svn/hogehoge/trunk/fooo/100" -> "trunk/fooo"
 				svnInfo.rootPath = svnUrl.replaceAll("/" + rev, "").replaceFirst(".*" + prjName + "/", "");
-
+				br.close();
 //				System.out.println(svnInfo.rootPath + ',' + svnInfo.revision);
 
 			} catch (IOException e) {
+			}finally{
 			}
 		}
 		return svnInfo;
