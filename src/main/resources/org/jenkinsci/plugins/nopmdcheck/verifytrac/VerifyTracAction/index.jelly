@@ -3,7 +3,6 @@
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 	<l:layout>
 		<style type="text/css">
-
 			tr.hidden{
 			display:none;
 			}
@@ -23,37 +22,42 @@
 			margin-top:10px;
 			margin-bottom:20px;
 			}
-			div.file-area h4.file-name{
-				margin-top:5px;
-				margin-bottom:2px;
+			div.file-area
+			h4.file-name{
+			margin-top:5px;
+			margin-bottom:2px;
 			}
-			
+
 			div.file-area table{
-				margin-left:20px;
+			margin-left:20px;
+			border-collapse:collapse;
 			}
-			
+
 			div.file-area th{
-				border-collapse:collapse;
-				border-style:solid;
-				border-color:#888;
-				border-bottom-width:1px;
-				border-top-width:0px;
-				border-right-width:0px;
-				border-left-width:0px;
+			border-style:solid;
+			border-color:#888;
+			border-bottom-width:1px;
+			border-top-width:0px;
+			border-right-width:0px;
+			border-left-width:0px;
 			}
-			
+
 			div.file-area td.number, div.file-area th.number{
-				font-size: 10px;
-				text-align: right;
-				color: #888;
-				width:34px;
+			font-size: 10px;
+			text-align: right;
+			color: #888;
+			width:34px;
 			}
-			
+
 			div.file-area td.wholeline{
-			padding-left:5px;
+			padding-left:1em;
 			padding-top:2px;
 			padding-bottom:2px;
 			width:700px;
+			}
+			
+			div.file-area tr.record-even{
+			background-color:#eff8ff;
 			}
 		</style>
 		<st:include it="${it.owner}" page="sidepanel.jelly" />
@@ -62,69 +66,91 @@
 				<h1>${it.displayName}</h1>
 			</div>
 
+			<table style="margin-top:1em;margin-left:1em;">
+				<tbody>
+					<tr>
+						<td>
+							<img width="48" height="48" style="margin-right:1em;"
+								src="${imagesURL}/48x48/notepad.png" alt="summary" />
+						</td>
+						<td>
+							<div id="summary">
+								<p>${it.ngCount}</p>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<img width="48" height="48" src="${imagesURL}/48x48/search.png"
+								alt="summary" />
+						</td>
+						<td>
+							<div id="ctrl">
 
-			<div id="summary">
-			<p>${it.ngCount}</p>
-			</div>
-			<div id="ctrl">
+								<button id="btn-ngonly" style="display:none;">Display only NG.</button>
+								<button id="btn-all">Display all</button>
 
-				<button id="btn-ngonly" style="display:none;">Display only NG.</button>
-				<button id="btn-all">Display all</button>
+							</div>
+							<div class="nopmd-result" title="${result.name}">
+								<h3>${result.name}</h3>
+								<j:forEach items="${it.resultList}" var="result"
+									indexVar="idx">
+									<div class="file-area">
+										<h4 class="file-name">
 
-			</div>
-			<div class="nopmd-result" title="${result.name}">
-				<h3>${result.name}</h3>
-				<j:forEach items="${it.resultList}" var="result" indexVar="idx">
-					<div class="file-area">
-						<h4 class="file-name">
+											<j:if test="${it.enableBrowser}">
+												<a href="${it.getBrowserUrl(result.name)}">${result.name}</a>
+											</j:if>
+											<j:if test="${!it.enableBrowser}">${result.name}</j:if>
+										</h4>
+										<table>
+											<thead>
+												<th class="stats">OK/NG</th>
+												<th class="number">@</th>
+												<th class="wholenumber">line</th>
+												<th class="link">link</th>
+											</thead>
+											<tbody>
+												<j:forEach items="${result.lineHolders}" var="holder"
+													escapeText="true">
+													<tr
+														class="${it.typeMap.get(holder.hashcode) eq 0?'line-ok hidden':'line-ng'}">
+														<td class="status">
+															<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 1}"> -->
+															<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
+																/> -->
+															<!-- </j:if> -->
+															<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 2}"> -->
+															<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
+																/> -->
+															<!-- </j:if> -->
+															<div class="status-icon"></div>
+														</td>
+														<td class="number">${holder.number}</td>
 
-							<j:if test="${it.enableBrowser}">
-								<a href="${it.getBrowserUrl(result.name)}">${result.name}</a>
-							</j:if>
-							<j:if test="${!it.enableBrowser}">${result.name}</j:if>
-						</h4>
-						<table>
-							<thead>
-								<th class="stats">OK/NG</th>
-								<th class="number">@</th>
-								<th class="wholenumber">line</th>
-								<th class="link">link</th>
-							</thead>
-							<tbody>
-								<j:forEach items="${result.lineHolders}" var="holder"
-									escapeText="true">
-									<tr
-										class="${it.typeMap.get(holder.hashcode) eq 0?'line-ok hidden':'line-ng'}">
-										<td class="status">
-											<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 1}"> -->
-											<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
-												/> -->
-											<!-- </j:if> -->
-											<!-- <j:if test="${it.typeMap.get(holder.hashcode) eq 2}"> -->
-											<!-- <img src="${rootURL}/plugin/nopmdverifytrac/img/status_ng.png" 
-												/> -->
-											<!-- </j:if> -->
-											<div class="status-icon"></div>
-										</td>
-										<td class="number">${holder.number}</td>
+														<td class="wholeline">
+															<j:out value="${holder.wholeLine}" />
+														</td>
+														<td>
+															<a href="${it.getBrowserUrl(result.name, holder.number)}">
+																<img width="16" height="16"
+																	src="${imagesURL}/16x16/notepad.png" alt="source" />
+															</a>
+														</td>
+													</tr>
+												</j:forEach>
 
-										<td class="wholeline">
-											<j:out value="${holder.wholeLine}" />
-										</td>
-										<td>
-											<a href="${it.getBrowserUrl(result.name, holder.number)}">go to source</a>
-										</td>
-									</tr>
+
+											</tbody>
+										</table>
+									</div>
 								</j:forEach>
 
-
-							</tbody>
-						</table>
-					</div>
-				</j:forEach>
-
-			</div>
-
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
 			<script type="text/javascript" src="${rootURL}/plugin/nopmdverifytrac/js/jquery.js"></script>
 			<script type="text/javascript"
@@ -142,19 +168,38 @@
 			]]>
 			</script>
 			<script type="text/javascript">
+				<![CDATA[
 				(function($){
-				$(function(){
+					$(function(){
 
-				$('#btn-ngonly').click(function(){
-				$('div.nopmd-result tr.line-ok').hide();
-				$('#btn-ngonly, #btn-all').toggle();
-				});
-				$('#btn-all').click(function(){
-				$('div.nopmd-result tr.line-ok').show();
-				$('#btn-ngonly, #btn-all').toggle();
-				});
-				});
+						$('#btn-ngonly').click(function(){
+							$('div.nopmd-result tr.line-ok').hide();
+							$('#btn-ngonly, #btn-all').toggle();
+							stripify();
+							location.href="#ngonly";
+						});
+						
+						$('#btn-all').click(function(){
+							$('div.nopmd-result tr.line-ok').show();
+							$('#btn-ngonly, #btn-all').toggle();
+							stripify();
+							location.href="#all";
+						});
+						if(location.href.match(/#all/)){
+							$('#btn-all').trigger('click');
+						}
+						stripify();
+					});
+					
+					var stripify = function(){
+						$('div.file-area table tbody').each(function(){
+							$(this).find('tr').removeClass('record-odd', 'record-even');
+							$(this).find('tr:visible:odd').addClass('record-odd');
+							$(this).find('tr:visible:even').addClass('record-even');
+						});
+					};
 				})(jQuery);
+				]]>
 			</script>
 
 		</l:main-panel>
