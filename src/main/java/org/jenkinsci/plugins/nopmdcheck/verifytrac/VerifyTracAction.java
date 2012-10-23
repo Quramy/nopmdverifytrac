@@ -128,7 +128,7 @@ public class VerifyTracAction implements Action {
 	}
 
 	public String getDisplayName() {
-		return "Nopmd check verify Trac result";
+		return "NOPMD Ticket Check";
 	}
 
 	public String getUrlName() {

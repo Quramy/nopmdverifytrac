@@ -109,7 +109,7 @@ public class VerifyTracPublisher extends Publisher {
 
 		if (action == null) {
 			listener.getLogger().println(
-					"cannot find nopmd-check-plugin result.");
+					"Cannot find nopmd-check-plugin result.");
 			return false;
 		}
 		List<CheckResult> resultList = action.getResultList();
