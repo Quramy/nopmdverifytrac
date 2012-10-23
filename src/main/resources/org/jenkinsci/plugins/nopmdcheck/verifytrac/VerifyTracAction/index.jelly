@@ -55,7 +55,7 @@
 			padding-bottom:2px;
 			width:700px;
 			}
-			
+
 			div.file-area tr.record-even{
 			background-color:#eff8ff;
 			}
@@ -73,26 +73,64 @@
 							<img width="48" height="48" style="margin-right:1em;"
 								src="${imagesURL}/48x48/notepad.png" alt="summary" />
 						</td>
-						<td>
+						<td style="vertical-align:middle;">
 							<div id="summary">
-								<p>${it.ngCount}</p>
+								<!-- <dl> -->
+								<!-- <dt>All 'NOPMD' count: </dt> -->
+								<!-- <dd>${it.nopmdCount}</dd> -->
+								<!-- <dt>NG 'NOPMD' count: </dt> -->
+								<!-- <dd>${it.ngCount}</dd> -->
+								<!-- </dl> -->
+								<p>
+									'NOPMD' count (NG/ALL):&#160;
+									<span class="ng-count">${it.ngCount}</span>
+									&#160;/&#160;${it.nopmdCount}
+								</p>
 							</div>
 						</td>
 					</tr>
+					<j:if test="${it.ticketCountMap.size() gt 0}">
+						<tr>
+							<td>
+								<img width="48" height="48" src="${imagesURL}/48x48/warning.png"
+									alt="warn" />
+							</td>
+							<td style="vertical-align:middle;">
+								<p>The following tickets are referred to more than the
+									limit(${it.thresholdTicketCount}).
+								</p>
+
+								<div style="margin-left:3em;">
+									<table>
+										<thead>
+											<tr>
+												<th>id</th>
+												<th>count</th>
+											</tr>
+										</thead>
+										<tbody>
+											<j:forEach items="${it.ticketCountMap}" var="ticket">
+												<tr>
+													<td>
+														<a href="${it.tracUrl}/ticket/${ticket.key}">#${ticket.key}</a>
+													</td>
+													<td style="text-align:right;">${ticket.value}</td>
+												</tr>
+											</j:forEach>
+										</tbody>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</j:if>
 					<tr>
 						<td>
 							<img width="48" height="48" src="${imagesURL}/48x48/search.png"
-								alt="summary" />
+								alt="detail" />
 						</td>
 						<td>
-							<div id="ctrl">
-
-								<button id="btn-ngonly" style="display:none;">Display only NG.</button>
-								<button id="btn-all">Display all</button>
-
-							</div>
-							<div class="nopmd-result" title="${result.name}">
-								<h3>${result.name}</h3>
+							<div class="nopmd-result">
+							<h3 style="margin-top:1em;">detail:</h3>
 								<j:forEach items="${it.resultList}" var="result"
 									indexVar="idx">
 									<div class="file-area">
@@ -146,6 +184,10 @@
 									</div>
 								</j:forEach>
 
+								<div id="ctrl">
+									<button id="btn-ngonly" style="display:none;">Display only NG.</button>
+									<button id="btn-all">Display all</button>
+								</div>
 							</div>
 						</td>
 					</tr>

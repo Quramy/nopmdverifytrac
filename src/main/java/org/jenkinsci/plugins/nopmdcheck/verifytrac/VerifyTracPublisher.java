@@ -38,6 +38,8 @@ public class VerifyTracPublisher extends Publisher {
 
 	private String password;
 
+	private Integer thresholdTicketCount;
+
 	public String getTicketPattern() {
 		return ticketPattern;
 	}
@@ -70,13 +72,32 @@ public class VerifyTracPublisher extends Publisher {
 		this.password = password;
 	}
 
+	public Integer getThresholdTicketCount() {
+		return thresholdTicketCount;
+	}
+
+	public void setThresholdTicketCount(Integer thresholdTicketCount) {
+		this.thresholdTicketCount = thresholdTicketCount;
+	}
+
 	@DataBoundConstructor
 	public VerifyTracPublisher(String ticketPattern, String tracUrl,
-			String user, String password) {
-		this.ticketPattern = ticketPattern;
+			String user, String password, Integer thresholdTicketCount) {
 		this.tracUrl = tracUrl.replaceAll("/\\s*$", "");
 		this.user = user;
 		this.password = password;
+
+		if (ticketPattern == null || ticketPattern.length() == 0) {
+			this.ticketPattern = "#(\\d+)";
+		} else {
+			this.ticketPattern = ticketPattern;
+		}
+
+		if (thresholdTicketCount == null || thresholdTicketCount <= 0) {
+			this.thresholdTicketCount = 10;
+		} else {
+			this.thresholdTicketCount = thresholdTicketCount;
+		}
 	}
 
 	@Override
@@ -99,6 +120,7 @@ public class VerifyTracPublisher extends Publisher {
 		Map<String, Integer> typeMap = new HashMap<String, Integer>();
 		Pattern p = Pattern.compile(this.ticketPattern);
 
+		Map<Integer, Integer> ticketCountMap = new HashMap<Integer, Integer>();
 		for (CheckResult result : resultList) {
 			for (LineHolder line : result.getLineHolders()) {
 				Matcher m = p.matcher(line.getComment());
@@ -113,29 +135,51 @@ public class VerifyTracPublisher extends Publisher {
 						typeMap.put(line.getHashcode(),
 								VerifyTracAction.TYPE_NOT_CLOSE);
 					}
+					Integer count = ticketCountMap.get(ticketId);
+					if (count != null) {
+						ticketCountMap.put(ticketId, count + 1);
+					} else {
+						ticketCountMap.put(ticketId, 1);
+					}
 				} else {
 					typeMap.put(line.getHashcode(),
 							VerifyTracAction.TYPE_NO_TICKET);
 				}
 			}
 		}
+		
 
 		VerifyTracAction verifyTracAction;
 		verifyTracAction = new VerifyTracAction(build);
 		verifyTracAction.setTypeMap(typeMap);
+		
+		//TODO rm
+		listener.getLogger().println(this.thresholdTicketCount);
+		verifyTracAction.setThresholdTicketCount(thresholdTicketCount);
+		Map<Integer, Integer> resultMap = new HashMap<Integer, Integer>();
+		for(Integer tickeId:ticketCountMap.keySet()){
+			Integer count = ticketCountMap.get(tickeId);
+			if(count >= this.thresholdTicketCount){
+//				ticketCountMap.remove(tickeId);
+				resultMap.put(tickeId, count);
+			}
+		}
+		verifyTracAction.setTicketCountMap(resultMap);
+		
 
 		SvnInfo svnInfo = fetchSvnInfo(build);
 		if (svnInfo != null) {
 			verifyTracAction.setRevision(svnInfo.revision);
 			verifyTracAction.setSvnPath(svnInfo.rootPath);
-			listener.getLogger().println("Success to fetch SVN info from SCM plugin result.");
+			listener.getLogger().println(
+					"Success to fetch SVN info from SCM plugin result.");
 			listener.getLogger().println("SVN path: " + svnInfo.rootPath);
 			listener.getLogger().println("SVN revision" + svnInfo.revision);
-		}else{
-			listener.getLogger().println("Fail to fetch SVN info from SCM plugin result.");
+		} else {
+			listener.getLogger().println(
+					"Fail to fetch SVN info from SCM plugin result.");
 		}
 		verifyTracAction.setTracUrl(tracUrl);
-
 
 		verifyTracAction.calcNopmdCount();
 		verifyTracAction.calcNgCount();
@@ -152,7 +196,7 @@ public class VerifyTracPublisher extends Publisher {
 					.println(
 							"There are one more 'NOPMD' whose ticket does not exits nor not close...");
 		}
-		
+
 		build.addAction(verifyTracAction);
 
 		return isSuccess;

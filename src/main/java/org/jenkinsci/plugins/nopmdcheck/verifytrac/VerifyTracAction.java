@@ -27,9 +27,30 @@ public class VerifyTracAction implements Action {
 	private String tracUrl;
 	private String svnPath;
 
+	private Integer thresholdTicketCount;
+
+	public Integer getThresholdTicketCount() {
+		return thresholdTicketCount;
+	}
+
+	public void setThresholdTicketCount(Integer thresholdTicketCount) {
+		this.thresholdTicketCount = thresholdTicketCount;
+	}
+
+
 	private Integer ngCount = null;
 
 	private Integer nopmdCount = null;
+	
+	private Map<Integer, Integer> ticketCountMap;
+
+	public Map<Integer, Integer> getTicketCountMap() {
+		return ticketCountMap;
+	}
+
+	public void setTicketCountMap(Map<Integer, Integer> ticketCountMap) {
+		this.ticketCountMap = ticketCountMap;
+	}
 
 	public Integer getNgCount() {
 		return ngCount;

@@ -2,9 +2,7 @@ package org.jenkinsci.plugins.nopmdcheck.verifytrac;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -17,7 +15,9 @@ public class TracClient {
 	private XmlRpcClient client;
 
 	private static final String QUERY_CLOSED = "ticket.query";
-	private static final Object[] PARAM_CLOSED = { "status=closed" };
+	
+	//TODO query result is hard coding...
+	private static final Object[] PARAM_CLOSED = { "status=closed&max=10000" };
 
 	public TracClient(String url, String user, String password) {
 
@@ -52,6 +52,9 @@ public class TracClient {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+//		System.out.println(res.size());
+		
 		return res;
 
 	}

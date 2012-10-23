@@ -18,5 +18,8 @@
 		<f:entry title="ticketPattern" field="ticketPattern">
 			<f:textbox />
 		</f:entry>
+		<f:entry title="warning threshold" field="thresholdTicketCount">
+			<f:textbox />
+		</f:entry>
 	</f:advanced>
 </j:jelly>
