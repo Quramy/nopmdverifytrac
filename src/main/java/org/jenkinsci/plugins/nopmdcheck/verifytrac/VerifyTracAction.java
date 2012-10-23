@@ -15,22 +15,22 @@ import org.jenkinsci.plugins.nopmdcheck.model.CheckResult;
 import org.jenkinsci.plugins.nopmdcheck.model.LineHolder;
 
 public class VerifyTracAction implements Action {
-	
+
 	public static final int TYPE_OK = 0;
 	public static final int TYPE_NOT_CLOSE = 1;
 	public static final int TYPE_NO_TICKET = 2;
 
 	private AbstractBuild<?, ?> owner;
-	
+
 	private Map<String, Integer> typeMap;
-	
-	
+
 	private String tracUrl;
 	private String svnPath;
-	
+
 	private Integer ngCount = null;
-	
-	
+
+	private Integer nopmdCount = null;
+
 	public Integer getNgCount() {
 		return ngCount;
 	}
@@ -38,33 +38,31 @@ public class VerifyTracAction implements Action {
 	public void setNgCount(Integer ngCount) {
 		this.ngCount = ngCount;
 	}
-	
-	public void calcNgCount(){
-		List<CheckResult> ngList = getNgList();
-		int sum = 0;
-		for(CheckResult checkResult: ngList){
-			sum += checkResult.getLineHolders().size();
-		}
-		this.ngCount = sum;
+
+	public Integer getNopmdCount() {
+		return nopmdCount;
+	}
+
+	public void setNopmdCount(Integer nopmdCount) {
+		this.nopmdCount = nopmdCount;
 	}
 
 	public String getTracUrl() {
 		return tracUrl;
 	}
-	
-	public boolean getEnableBrowser(){
-		return svnPath != null && svnPath.length() > 0 && revision != null & revision.length() > 0;
+
+	public boolean getEnableBrowser() {
+		return svnPath != null && svnPath.length() > 0 && revision != null
+				& revision.length() > 0;
 	}
-	
-	public String getBrowserUrl(String name){
+
+	public String getBrowserUrl(String name) {
 		return tracUrl + "/browser/" + svnPath + name + "?rev=" + revision;
 	}
-	
 
-	public String getBrowserUrl(String name, int line){
+	public String getBrowserUrl(String name, int line) {
 		return getBrowserUrl(name) + "#L" + line;
 	}
-
 
 	public void setTracUrl(String tracUrl) {
 		this.tracUrl = tracUrl;
@@ -115,48 +113,67 @@ public class VerifyTracAction implements Action {
 	public String getUrlName() {
 		return "nopmdCheckVerifyTracResult";
 	}
-	
-	private List<CheckResult> getOwnersResult(){
 
-		NopmdCheckResultAction action = owner.getAction(NopmdCheckResultAction.class);
-		if(action == null){
+	public void calcNgCount() {
+		List<CheckResult> ngList = getNgList();
+		int sum = 0;
+		for (CheckResult checkResult : ngList) {
+			sum += checkResult.getLineHolders().size();
+		}
+		this.ngCount = sum;
+	}
+
+	public void calcNopmdCount() {
+		int sum = 0;
+
+		for (CheckResult result : getOwnersResult()) {
+			sum += result.getLineHolders().size();
+		}
+		this.nopmdCount = sum;
+	}
+
+	private List<CheckResult> getOwnersResult() {
+
+		NopmdCheckResultAction action = owner
+				.getAction(NopmdCheckResultAction.class);
+		if (action == null) {
 			return null;
 		}
-		
+
 		return action.getResultList();
 	}
-	
-	public List<CheckResult> getNgList(){
+
+	public List<CheckResult> getNgList() {
 		List<CheckResult> results = new ArrayList<CheckResult>();
-		for(CheckResult result:getOwnersResult()){
+		for (CheckResult result : getOwnersResult()) {
 			CheckResult checkResult = new CheckResult();
 			List<LineHolder> lineHolders = new ArrayList<LineHolder>();
-			for(LineHolder lineHolder:result.getLineHolders()){
+			for (LineHolder lineHolder : result.getLineHolders()) {
 				int status = typeMap.get(lineHolder.getHashcode());
-				if(status != TYPE_OK){
+				if (status != TYPE_OK) {
 					lineHolders.add(lineHolder);
 				}
 			}
-			if(lineHolders.size() > 0){
+			if (lineHolders.size() > 0) {
 				checkResult.setName(result.getName());
 				checkResult.setLineHolders(lineHolders);
 				results.add(checkResult);
 			}
 		}
-		
+
 		return results;
 	}
-	
-	public List<CheckResult> getResultList(){
+
+	public List<CheckResult> getResultList() {
 		return getOwnersResult();
 	}
-	
-	public String getResultListAsJson(){
-		JSONArray jsonArray= JSONArray.fromObject(getOwnersResult());
+
+	public String getResultListAsJson() {
+		JSONArray jsonArray = JSONArray.fromObject(getOwnersResult());
 		return jsonArray.toString();
 	}
-	
-	public String getTypeMapAsJson(){
+
+	public String getTypeMapAsJson() {
 		return JSONObject.fromObject(typeMap).toString();
 	}
 

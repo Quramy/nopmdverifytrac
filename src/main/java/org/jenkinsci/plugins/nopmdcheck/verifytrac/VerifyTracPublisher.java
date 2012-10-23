@@ -71,7 +71,8 @@ public class VerifyTracPublisher extends Publisher {
 	}
 
 	@DataBoundConstructor
-	public VerifyTracPublisher(String ticketPattern, String tracUrl, String user, String password) {
+	public VerifyTracPublisher(String ticketPattern, String tracUrl,
+			String user, String password) {
 		this.ticketPattern = ticketPattern;
 		this.tracUrl = tracUrl.replaceAll("/\\s*$", "");
 		this.user = user;
@@ -79,18 +80,21 @@ public class VerifyTracPublisher extends Publisher {
 	}
 
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-			throws InterruptedException {
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+			BuildListener listener) throws InterruptedException {
 		//
-		NopmdCheckResultAction action = build.getAction(NopmdCheckResultAction.class);
+		NopmdCheckResultAction action = build
+				.getAction(NopmdCheckResultAction.class);
 
 		if (action == null) {
-			listener.getLogger().println("cannot find nopmd-check-plugin result.");
+			listener.getLogger().println(
+					"cannot find nopmd-check-plugin result.");
 			return false;
 		}
 		List<CheckResult> resultList = action.getResultList();
 
-		Set<Integer> idSet = new TracClient(this.tracUrl, this.user, this.password).getClosedSet();
+		Set<Integer> idSet = new TracClient(this.tracUrl, this.user,
+				this.password).getClosedSet();
 
 		Map<String, Integer> typeMap = new HashMap<String, Integer>();
 		Pattern p = Pattern.compile(this.ticketPattern);
@@ -103,12 +107,15 @@ public class VerifyTracPublisher extends Publisher {
 					if (idSet.contains(ticketId)) {
 						// TODO replace OK code
 						// listener.getLogger().println(ticketId + ", OK!");
-						typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_OK);
+						typeMap.put(line.getHashcode(),
+								VerifyTracAction.TYPE_OK);
 					} else {
-						typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_NOT_CLOSE);
+						typeMap.put(line.getHashcode(),
+								VerifyTracAction.TYPE_NOT_CLOSE);
 					}
 				} else {
-					typeMap.put(line.getHashcode(), VerifyTracAction.TYPE_NO_TICKET);
+					typeMap.put(line.getHashcode(),
+							VerifyTracAction.TYPE_NO_TICKET);
 				}
 			}
 		}
@@ -116,37 +123,58 @@ public class VerifyTracPublisher extends Publisher {
 		VerifyTracAction verifyTracAction;
 		verifyTracAction = new VerifyTracAction(build);
 		verifyTracAction.setTypeMap(typeMap);
-		
+
 		SvnInfo svnInfo = fetchSvnInfo(build);
-		
-		verifyTracAction.setRevision(svnInfo.revision);
-		verifyTracAction.setSvnPath(svnInfo.rootPath);
+		if (svnInfo != null) {
+			verifyTracAction.setRevision(svnInfo.revision);
+			verifyTracAction.setSvnPath(svnInfo.rootPath);
+			listener.getLogger().println("Success to fetch SVN info from SCM plugin result.");
+			listener.getLogger().println("SVN path: " + svnInfo.rootPath);
+			listener.getLogger().println("SVN revision" + svnInfo.revision);
+		}else{
+			listener.getLogger().println("Fail to fetch SVN info from SCM plugin result.");
+		}
 		verifyTracAction.setTracUrl(tracUrl);
+
+
+		verifyTracAction.calcNopmdCount();
 		verifyTracAction.calcNgCount();
+
+		listener.getLogger().println(
+				"All 'NOPMD' count: " + verifyTracAction.getNopmdCount());
+		listener.getLogger().println(
+				"NG 'NOPMD' count: " + verifyTracAction.getNgCount());
+
+		boolean isSuccess = verifyTracAction.getNgCount() == 0;
+		if (!isSuccess) {
+			listener.getLogger().println("NOPMD check verify trac failed.");
+			listener.getLogger()
+					.println(
+							"There are one more 'NOPMD' whose ticket does not exits nor not close...");
+		}
 		
-		//TODO formatting.
-		listener.getLogger().println(verifyTracAction.getRevision());
 		build.addAction(verifyTracAction);
 
-		return true;
+		return isSuccess;
 	}
 
 	/**
 	 * fetch SVN url and revision from revision.txt.
+	 * 
 	 * @param build
 	 * @return
 	 */
 	private SvnInfo fetchSvnInfo(AbstractBuild<?, ?> build) {
 
-		SvnInfo svnInfo = new SvnInfo();
-		String rev = "";
-		String svnUrl = "";
-		String prjName = "";
-
 		// "http://com.example/svn/trunk/fooo/100" in revision.txt.
 		// The last path fragment is revision.
 		File f = new File(build.getRootDir(), "revision.txt");
 		if (f.exists()) {
+			SvnInfo svnInfo = new SvnInfo();
+
+			String rev = "";
+			String svnUrl = "";
+			String prjName = "";
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(f));
 				svnUrl = br.readLine();
@@ -160,24 +188,30 @@ public class VerifyTracPublisher extends Publisher {
 					svnInfo.revision = rev;
 				}
 
-				// If tracUrl is "http://com.example/trac/hogehoge", prjName is "hogehoge".
+				// If tracUrl is "http://com.example/trac/hogehoge", prjName is
+				// "hogehoge".
 				Pattern pPrj = Pattern.compile("[^/]+$");
 				Matcher mPrj = pPrj.matcher(tracUrl);
 				if (mPrj.find()) {
 					prjName = mPrj.group();
-//					System.out.println(prjName);
+					// System.out.println(prjName);
 				}
 
-				// "http://com.example/svn/hogehoge/trunk/fooo/100" -> "trunk/fooo"
-				svnInfo.rootPath = svnUrl.replaceAll("/" + rev, "").replaceFirst(".*" + prjName + "/", "");
+				// "http://com.example/svn/hogehoge/trunk/fooo/100" ->
+				// "trunk/fooo"
+				svnInfo.rootPath = svnUrl.replaceAll("/" + rev, "")
+						.replaceFirst(".*" + prjName + "/", "");
 				br.close();
-//				System.out.println(svnInfo.rootPath + ',' + svnInfo.revision);
+				// System.out.println(svnInfo.rootPath + ',' +
+				// svnInfo.revision);
 
 			} catch (IOException e) {
-			}finally{
+			} finally {
 			}
+			return svnInfo;
+		} else {
+			return null;
 		}
-		return svnInfo;
 
 	}
 
@@ -193,7 +227,8 @@ public class VerifyTracPublisher extends Publisher {
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<Publisher> {
 
-		public boolean isApplicable(Class<? extends AbstractProject<?, ?>> aClass) {
+		public boolean isApplicable(
+				Class<? extends AbstractProject<?, ?>> aClass) {
 			return true;
 		}
 
@@ -207,7 +242,8 @@ public class VerifyTracPublisher extends Publisher {
 		}
 
 		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+		public boolean configure(StaplerRequest req, JSONObject formData)
+				throws FormException {
 			// To persist global configuration information,
 			// set that to properties and call save().
 			// ^Can also use req.bindJSON(this, formData);
