@@ -249,7 +249,7 @@
 					
 					var stripify = function(){
 						$$('div.file-area table tbody').each(function(){
-							$$(this).find('tr').removeClass('record-odd', 'record-even');
+							$$(this).find('tr').removeClass('record-odd').removeClass('record-even');
 							$$(this).find('tr:visible:odd').addClass('record-odd');
 							$$(this).find('tr:visible:even').addClass('record-even');
 						});
