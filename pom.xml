@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>nopmdcheck</artifactId>
-			<version>${project.version}</version>
+			<version>0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xmlrpc</groupId>
